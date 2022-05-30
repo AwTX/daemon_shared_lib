@@ -2,45 +2,45 @@
 #include <stdlib.h>
 #include "mylib.h"
 #include <sys/mman.h>
-#include <sys/stat.h>       
-#include <fcntl.h>          
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <semaphore.h>
 #include <string.h>
 
 int write_to_shmem() {
   int fd = shm_open(BackingFile,      /* name from smem.h */
-		    O_RDWR | O_CREAT, /* read/write, create if needed */
-		    AccessPerms);     /* access permissions (0644) */
-  if (fd < 0) exit(-1); 
+                    O_RDWR | O_CREAT, /* read/write, create if needed */
+                    AccessPerms);     /* access permissions (0644) */
+  if (fd < 0) exit(-1);
 
   ftruncate(fd, ByteSize); /* get the bytes */
 
   caddr_t memptr = mmap(NULL,       /* let system pick where to put segment */
-			ByteSize,   /* how many bytes */
-			PROT_READ | PROT_WRITE, /* access protections */
-			MAP_SHARED, /* mapping visible to other processes */
-			fd,         /* file descriptor */
-			0);         /* offset: start at 1st byte */
+                        ByteSize,   /* how many bytes */
+                        PROT_READ | PROT_WRITE, /* access protections */
+                        MAP_SHARED, /* mapping visible to other processes */
+                        fd,         /* file descriptor */
+  0);         /* offset: start at 1st byte */
   if ((caddr_t) -1  == memptr) exit(-1);
-  
+
   fprintf(stderr, "shared mem address: %p [0..%d]\n", memptr, ByteSize - 1);
   fprintf(stderr, "backing file:       /dev/shm%s\n", BackingFile );
 
   /* semahore code to lock the shared mem */
   sem_t* semptr = sem_open(SemaphoreName, /* name */
-			   O_CREAT,       /* create the semaphore */
-			   AccessPerms,   /* protection perms */
-			   0);            /* initial value */
-  if (semptr == (void*) -1) exit(-1); 
-  
+                           O_CREAT,       /* create the semaphore */
+                           AccessPerms,   /* protection perms */
+  0);            /* initial value */
+  if (semptr == (void*) -1) exit(-1);
+
   strcpy(memptr, MemContents); /* copy some ASCII bytes to the segment */
 
   /* increment the semaphore so that memreader can read */
   if (sem_post(semptr) < 0) exit(-1); 
 
   sleep(60); /* give reader a chance */
-  
+
   /* clean up */
   munmap(memptr, ByteSize); /* unmap the storage */
   close(fd);
@@ -56,18 +56,18 @@ int read_from_shmem() {
 
   /* get a pointer to memory */
   caddr_t memptr = mmap(NULL,       /* let system pick where to put segment */
-			ByteSize,   /* how many bytes */
-			PROT_READ | PROT_WRITE, /* access protections */
-			MAP_SHARED, /* mapping visible to other processes */
-			fd,         /* file descriptor */
-			0);         /* offset: start at 1st byte */
+                        ByteSize,   /* how many bytes */
+                        PROT_READ | PROT_WRITE, /* access protections */
+                        MAP_SHARED, /* mapping visible to other processes */
+                        fd,         /* file descriptor */
+  0);         /* offset: start at 1st byte */
   if ((caddr_t) -1 == memptr) exit(-1);
 
   /* create a semaphore for mutual exclusion */
   sem_t* semptr = sem_open(SemaphoreName, /* name */
-			   O_CREAT,       /* create the semaphore */
-			   AccessPerms,   /* protection perms */
-			   0);            /* initial value */
+                           O_CREAT,       /* create the semaphore */
+                           AccessPerms,   /* protection perms */
+  0);            /* initial value */
   if (semptr == (void*) -1) exit(-1);
 
   /* use semaphore as a mutex (lock) by waiting for writer to increment it */

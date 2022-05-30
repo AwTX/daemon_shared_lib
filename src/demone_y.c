@@ -10,101 +10,101 @@
 
 void sig_handler(int signum){
 
-	void *handle;
-        int (*num)(void);
-        char *error;
+  void *handle;
+  int (*num)(void);
+  char *error;
 
-	handle = dlopen ("libmylib.so", RTLD_LAZY);
-	if (!handle) {
-            fputs (dlerror(), stderr);
-            exit(1);
-  	}
+  handle = dlopen ("libmylib.so", RTLD_LAZY);
+  if (!handle) {
+    fputs (dlerror(), stderr);
+    exit(1);
+  }
 
-  	num = dlsym(handle, "write_to_shmem");
-  	if ((error = dlerror()) != NULL)  {
-            fputs(error, stderr);
-            exit(1);
-  	}
+  num = dlsym(handle, "write_to_shmem");
+  if ((error = dlerror()) != NULL)  {
+    fputs(error, stderr);
+    exit(1);
+  }
 
-        if ((*num)() == 0) {
-            syslog (LOG_NOTICE, "SIGNAL SENT (alessio)");
-        }
+  if ((*num)() == 0) {
+    syslog (LOG_NOTICE, "SIGNAL SENT (alessio)");
+  }
 
-	dlclose(handle);
-  
+  dlclose(handle);
+
 
 }
 
 
 static void skeleton_daemon()
 {
-    pid_t pid;
+  pid_t pid;
 
-    /* Fork off the parent process */
-    pid = fork();
+  /* Fork off the parent process */
+  pid = fork();
 
-    /* An error occurred */
-    if (pid < 0)
-        exit(EXIT_FAILURE);
+  /* An error occurred */
+  if (pid < 0)
+    exit(EXIT_FAILURE);
 
-    /* Success: Let the parent terminate */
-    if (pid > 0)
-        exit(EXIT_SUCCESS);
+  /* Success: Let the parent terminate */
+  if (pid > 0)
+    exit(EXIT_SUCCESS);
 
-    /* On success: The child process becomes session leader */
-    if (setsid() < 0)
-        exit(EXIT_FAILURE);
+  /* On success: The child process becomes session leader */
+  if (setsid() < 0)
+    exit(EXIT_FAILURE);
 
-    /* Catch, ignore and handle signals */
-    //TODO: Implement a working signal handler */
-    signal(SIGCHLD, SIG_IGN);
-    signal(SIGHUP, SIG_IGN);
+  /* Catch, ignore and handle signals */
+  //TODO: Implement a working signal handler */
+  signal(SIGCHLD, SIG_IGN);
+  signal(SIGHUP, SIG_IGN);
 
-    /* Fork off for the second time*/
-    pid = fork();
+  /* Fork off for the second time*/
+  pid = fork();
 
-    /* An error occurred */
-    if (pid < 0)
-        exit(EXIT_FAILURE);
+  /* An error occurred */
+  if (pid < 0)
+    exit(EXIT_FAILURE);
 
-    /* Success: Let the parent terminate */
-    if (pid > 0)
-        exit(EXIT_SUCCESS);
+  /* Success: Let the parent terminate */
+  if (pid > 0)
+    exit(EXIT_SUCCESS);
 
-    /* Set new file permissions */
-    umask(0);
+  /* Set new file permissions */
+  umask(0);
 
-    /* Change the working directory to the root directory */
-    /* or another appropriated directory */
-    chdir("/");
+  /* Change the working directory to the root directory */
+  /* or another appropriated directory */
+  chdir("/");
 
-    /* Close all open file descriptors */
-    int x;
-    for (x = sysconf(_SC_OPEN_MAX); x>=0; x--)
+  /* Close all open file descriptors */
+  int x;
+  for (x = sysconf(_SC_OPEN_MAX); x>=0; x--)
     {
-        close (x);
+      close (x);
     }
 
-    /* Open the log file */
-    openlog ("DEMONE_X", LOG_PID, LOG_DAEMON);
+  /* Open the log file */
+  openlog ("DEMONE_X", LOG_PID, LOG_DAEMON);
 }
 
 
 int main()
 {
-    skeleton_daemon();
+  skeleton_daemon();
 
-    while (1)
+  while (1)
     {
-   	//TODO: Insert daemon code here.
-        syslog (LOG_NOTICE, "DEMONE_X AVVIATO (alessio)");
-	signal(SIGINT, sig_handler);
-        sleep (120);
-        break;
+      //TODO: Insert daemon code here.
+      syslog (LOG_NOTICE, "DEMONE_X AVVIATO (alessio)");
+      signal(SIGINT, sig_handler);
+      sleep (120);
+      break;
     }
 
-    syslog (LOG_NOTICE, "DEMONE_X TERMINATO (alessio)");
-    closelog();
+  syslog (LOG_NOTICE, "DEMONE_X TERMINATO (alessio)");
+  closelog();
 
-    return EXIT_SUCCESS;
+  return EXIT_SUCCESS;
 }
