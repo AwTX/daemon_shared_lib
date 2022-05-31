@@ -14,7 +14,7 @@ void sig_handler(int signum){
   int (*num)(void);
   char *error;
   printf("prova a caricare\n");
-  handle = dlopen ("build/libmylib.so", RTLD_LAZY);
+  handle = dlopen ("libmylib.so", RTLD_LAZY);
   if (!handle) {
     fputs (dlerror(), stderr);
     exit(1);
@@ -89,16 +89,11 @@ static void skeleton_daemon()
 
 int main()
 {
-  //skeleton_daemon();
+  skeleton_daemon();
+  syslog (LOG_NOTICE, "DEMONE_X AVVIATO (alessio)");
   signal(SIGUSR1, sig_handler);
 
-  while (1) {
-    //TODO: Insert daemon code here.
-    printf("loop\n");
-    syslog (LOG_NOTICE, "DEMONE_X AVVIATO (alessio)");
-    sleep (1);
-  }
-
+  sleep(60);
   syslog (LOG_NOTICE, "DEMONE_X TERMINATO (alessio)");
   closelog();
 

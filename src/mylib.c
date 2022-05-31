@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <semaphore.h>
 #include <string.h>
+#include <syslog.h>
 
 int write_to_shmem() {
   int fd = shm_open(BackingFile,      /* name from smem.h */
@@ -39,6 +40,7 @@ int write_to_shmem() {
   /* increment the semaphore so that memreader can read */
   if (sem_post(semptr) < 0) exit(-1); 
 
+  syslog (LOG_NOTICE, "SIGNAL SENT");
   sleep(60); /* give reader a chance */
 
   /* clean up */
